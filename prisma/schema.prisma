@@ -13,26 +13,56 @@ datasource db {
 
 // one to one relation between user and profile 
 model User{
-  id Int @default(autoincrement())
+  id Int @unique @default(autoincrement())
   email String @unique
   name String 
   role Role? @default(USER)
-  // one to one relation with profile
-  profileId Int? @unique
-  profile Profile? @relation(fields: [profileId], references: [id])
-  // one to one relation with profile
+  // relation with profile one to one 
+  profile Profile ?
+  // relation with profile one to one 
 
+  // one to many relation between user and post
+  post Post[]
+  // one to many relation between user and post
   @@map("user")
 }
 
 model Profile {
-  id Int @id @default(autoincrement())
+  id Int  @unique @default(autoincrement())
   bio String
-  // relation with user one to one 
-  user User ?
-  // relation with user one to one 
+ 
+   // one to one relation with user
+  userId Int? @unique
+  user User? @relation(fields: [userId], references: [id])
+  // one to one relation with user
 }
 
+model Post{
+  id Int @id @default(autoincrement())
+  title String
+  createdAt DateTime? @default(now())
+  updatedAt DateTime @updatedAt
+  published Boolean @default(false)
+  // one to many relation between user and post
+  authorId Int
+  author User @relation(fields: [authorId], references: [id])
+  // one to many relation between user and post
+
+
+
+  // many to many relationship with category and post 
+ categories Category[]
+ // many to many relationship with category and post
+}
+
+
+model Category {
+  id Int @id @default(autoincrement())
+  name String
+  // many to many relationship with category and post
+  posts Post[]
+  // many to many relationship with category and post
+}
 
 enum Role {
   USER 
