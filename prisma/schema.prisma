@@ -1,0 +1,40 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+// one to one relation between user and profile 
+model User{
+  id Int @default(autoincrement())
+  email String @unique
+  name String 
+  role Role? @default(USER)
+  // one to one relation with profile
+  profileId Int? @unique
+  profile Profile? @relation(fields: [profileId], references: [id])
+  // one to one relation with profile
+
+  @@map("user")
+}
+
+model Profile {
+  id Int @id @default(autoincrement())
+  bio String
+  // relation with user one to one 
+  user User ?
+  // relation with user one to one 
+}
+
+
+enum Role {
+  USER 
+  ADMIN
+}
