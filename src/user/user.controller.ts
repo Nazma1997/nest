@@ -1,12 +1,29 @@
 /* eslint-disable */
-import { Body, ConflictException, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
+import { ProfileService } from './../profile/profile.service';
+import {
+  Body,
+  ConflictException,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Put,
+  NotFoundException,
+} from '@nestjs/common';
+
 import { UserService } from './user.service';
 import { UserDto } from './dto/user-create-dto';
+import { PostsService } from 'src/posts/posts.service';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
-
+  constructor(
+    private readonly userService: UserService,
+    private readonly profileService: ProfileService,
+    private readonly postService: PostsService, // Inject the ProfileService
+  ) {}
   // create
   @Post('/create-user')
   createNewUser(@Body() userDto: UserDto) {
@@ -39,17 +56,13 @@ export class UserController {
   }
 
   //delete
-  @Delete('/:id')
-  async deleteUser(@Param('id') userId: number) {
+  @Delete(':id')
+  async deleteUser(@Param('id') userId: number): Promise<void> {
     try {
       await this.userService.deleteUser(userId);
-      return { message: 'User deleted successfully' };
     } catch (error) {
-      if (
-        error.message ===
-        'User cannot be deleted because related records exist.'
-      ) {
-        throw new ConflictException(error.message);
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
       }
       throw error;
     }

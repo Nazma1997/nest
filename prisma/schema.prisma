@@ -48,8 +48,6 @@ model Post{
   author User @relation(fields: [authorId], references: [id])
   // one to many relation between user and post
 
-
-
   // many to many relationship with category and post 
  categories Category[]
  // many to many relationship with category and post

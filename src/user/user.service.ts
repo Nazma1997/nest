@@ -34,27 +34,41 @@ export class UserService {
 
   //delete
   async deleteUser(userId: number): Promise<void> {
-    // Check if the user exists
-    const user = await this.prismaService.user.findUnique({
-      where: { id: +userId },
+    // Use Prisma transaction to ensure atomicity
+    await this.prismaService.$transaction(async (prisma) => {
+      // Check if the user exists
+      const user = await prisma.user.findUnique({
+        where: { id: +userId },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      // Check if there are related posts referencing this user
+      const relatedPosts = await prisma.post.deleteMany({
+        where: { authorId: +userId },
+      });
+
+      if (!relatedPosts){
+        throw new NotFoundException('User has related post');
+      }
+        const relatedProfile = await prisma.profile.delete({
+          where: { userId: +userId },
+        });
+       if (!relatedProfile){
+         throw new NotFoundException('User has related profile');
+       }
+        
+
+      // If no related posts exist, delete the user
+      await prisma.user.delete({
+        where: { id: +userId },
+      });
+
+       return { message: 'deleted user' };
     });
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    // Check if there are related records (e.g., posts) referencing this user
-    const relatedPosts = await this.prismaService.post.findMany({
-      where: { authorId: +userId },
-    });
-
-    if (relatedPosts.length > 0) {
-      throw new Error('User cannot be deleted because related records exist.');
-    }
-
-    // If no related records exist, delete the user
-    await this.prismaService.user.delete({
-      where: { id: +userId },
-    });
+   
   }
 }
